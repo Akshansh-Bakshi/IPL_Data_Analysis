@@ -13,9 +13,9 @@ Talking about the project, this basically focuses on data analysis (I know I hav
 As a future aspect, we would love to add pitch and venue analysis, along with some ML applications to make it more dynamic and future ready.
 
 
-<img width="90" height="40" alt="image" src="https://github.com/user-attachments/assets/f23909d1-f83f-449d-874c-d54a222030b0" />  <img width="90" height="40" alt="image" src="https://github.com/user-attachments/assets/81289d4f-4bc2-4ab4-b1f9-21f68990cbe0" />
-<img width="90" height="40" alt="image" src="https://github.com/user-attachments/assets/a7a798c5-2680-435e-911d-377dc46fbfa3" /> <img width="90" height="40" alt="image" src="https://github.com/user-attachments/assets/f6e7e36a-0efa-4113-84d8-f26033ef80e2" />
-<img width="90" height="40" alt="image" src="https://github.com/user-attachments/assets/63e6acfd-a048-443d-a159-b7f71ab4ebb8" />
+<img width="90" height="70" alt="image" src="https://github.com/user-attachments/assets/f23909d1-f83f-449d-874c-d54a222030b0" />  <img width="90" height="70" alt="image" src="https://github.com/user-attachments/assets/81289d4f-4bc2-4ab4-b1f9-21f68990cbe0" />
+<img width="90" height="70" alt="image" src="https://github.com/user-attachments/assets/a7a798c5-2680-435e-911d-377dc46fbfa3" /> <img width="90" height="70" alt="image" src="https://github.com/user-attachments/assets/f6e7e36a-0efa-4113-84d8-f26033ef80e2" />
+<img width="90" height="70" alt="image" src="https://github.com/user-attachments/assets/63e6acfd-a048-443d-a159-b7f71ab4ebb8" />
 
 
 
