@@ -1,0 +1,237 @@
+import streamlit as st
+import pandas as pd
+import plotly.express as px
+import numpy as np
+import re
+
+st.set_page_config(page_title="IPL 2025 Analytics Dashboard", page_icon="cricket_ball", layout="wide", initial_sidebar_state="expanded")
+
+st.markdown("""
+<style>
+    .main {background: linear-gradient(135deg, #0f1419, #1a1f2e); color: #f0f0f0; padding-bottom: 3rem;}
+    h1, h2, h3, h4 {color: #ffd700 !important; font-weight: 800 !important; text-align: center;}
+    .css-1d391kg, .css-1v0mbdj {background: #0d1117 !important; border-right: 3px solid #ffd700;}
+    
+    .best-player-card {
+        background: linear-gradient(135deg, #ff8c00, #ffd700);
+        padding: 2.6rem; border-radius: 28px; text-align: center;
+        box-shadow: 0 20px 50px rgba(255,140,0,0.7); margin: 3rem 0;
+        color: #000; font-weight: bold; border: 5px solid #ffffff;
+    }
+    .metric-card {
+        background: rgba(13,17,23,0.95); padding: 1.8rem; border-radius: 20px;
+        border: 3px solid #ffd700; text-align: center; color: #ffd700;
+        font-size: 1.2rem; box-shadow: 0 8px 25px rgba(255,215,0,0.4);
+        transition: all 0.3s;
+    }
+    .metric-card:hover {transform: translateY(-8px);}
+    .stTabs [data-baseweb="tab"] {font-size: 1.2rem; font-weight: 700; color: #ffd700; background: #161b22; border-radius: 15px 15px 0 0;}
+    .stTabs [data-baseweb="tab"][aria-selected="true"] {background: #ffd700; color: #000;}
+</style>
+""", unsafe_allow_html=True)
+
+@st.cache_data
+def load_data():
+    deliveries = pd.read_csv('deliveries.csv')
+    matches = pd.read_csv('matches.csv')
+    orange_cap = pd.read_csv('orange_cap.csv')
+    purple_cap = pd.read_csv('purple_cap.csv')
+    player_info = pd.read_csv('player_info.csv')
+    return orange_cap, purple_cap, matches, player_info, deliveries
+
+orange_cap, purple_cap, matches, player_info, deliveries = load_data()
+
+st.markdown("<h1 style='padding: 2rem 0 0.5rem 0;'>🏏 IPL 2025 Analytics Dashboard</h1>", unsafe_allow_html=True)
+st.markdown("<p style='text-align:center; color:#b0b0b0; font-size:1.35rem; margin-bottom:2rem;'>The Most Beautiful & Complete IPL Data Science Project Ever Made</p>", unsafe_allow_html=True)
+
+with st.sidebar:
+    st.image("https://images.fotmob.com/image_resources/logo/league/logo_9627_ipl.png", width=240)
+    
+    st.markdown("## Navigation")
+    main_option = st.selectbox("Choose Section", [
+        "Player Analysis",
+        "Team Analysis",
+        "Ground Analysis (Coming Soon)"
+    ], label_visibility="collapsed")
+
+    st.markdown("---")
+    st.markdown("### Current Season Leaders")
+    if not orange_cap.empty:
+        oc = orange_cap.loc[orange_cap['Runs'].idxmax()]
+        st.markdown(f"*Orange Cap* 🏆\n\n*{oc['Batsman']}*\n{int(oc['Runs'])} runs")
+    if not purple_cap.empty:
+        pc = purple_cap.loc[purple_cap['Wickets'].idxmax()]
+        st.markdown(f"*Purple Cap* 🏆\n\n*{pc['Bowler']}*\n{int(pc['Wickets'])} wickets")
+
+if main_option == "Player Analysis":
+    tab1, tab2, tab3 = st.tabs(["Batsmen 🔥", "Bowlers 🏏", "All-Rounders ⚡"])
+
+    with tab1:
+        st.markdown("### Orange Cap Race 2025")
+        top10 = orange_cap.sort_values('Runs', ascending=False).head(10).copy()
+        top10['Rank'] = range(1, 11)
+
+        c1, c2 = st.columns([4, 2])
+        with c1:
+            fig = px.bar(top10, x='Batsman', y='Runs', text='Runs', color='Runs',
+                         color_continuous_scale='Oranges', height=620, title="Top 10 Run Scorers")
+            fig.update_traces(textposition='outside', textfont_size=15)
+            fig.update_layout(plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)',
+                              font_color="#f0f0f0", title_font_color="#ffd700")
+            st.plotly_chart(fig, use_container_width=True)
+        with c2:
+            st.dataframe(top10[['Rank','Batsman','Team','Runs','Average','Strike_rate','Sixes','Fours']].set_index('Rank'),
+                         use_container_width=True)
+
+        def norm(x): return (x - x.min()) / (x.max() - x.min() + 1e-8)
+        df_bat = orange_cap.copy()
+        df_bat['Score'] = (0.35*norm(df_bat['Runs']) + 0.25*norm(df_bat['Average']) + 
+                          0.20*norm(df_bat['Strike_rate']) + 0.15*norm(df_bat['Sixes']) + 0.05*norm(df_bat['Fours']))
+        mvp_bat = df_bat.sort_values('Score', ascending=False).iloc[0]
+
+        st.markdown(f"""
+        <div class="best-player-card">
+            <h2>Best Batsman of IPL 2025</h2>
+            <h1>{mvp_bat['Batsman']}</h1>
+            <p style='font-size:1.5rem; margin:15px 0;'>
+                {int(mvp_bat['Runs'])} runs • Avg {mvp_bat['Average']:.1f} • SR {mvp_bat['Strike_rate']:.1f} • {int(mvp_bat['Sixes'])} sixes • {int(mvp_bat['Fours'])} fours
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with tab2:
+        st.markdown("### Purple Cap Race 2025")
+        top10w = purple_cap.sort_values('Wickets', ascending=False).head(10).copy()
+        top10w['Rank'] = range(1, 11)
+
+        c1, c2 = st.columns([4, 2])
+        with c1:
+            fig = px.bar(top10w, x='Bowler', y='Wickets', text='Wickets', color='Wickets',
+                         color_continuous_scale='Purples', height=620, title="Top 10 Wicket-Takers")
+            fig.update_traces(textposition='outside', textfont_size=15)
+            fig.update_layout(plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)',
+                              font_color="#f0f0f0", title_font_color="#ffd700")
+            st.plotly_chart(fig, use_container_width=True)
+        with c2:
+            st.dataframe(top10w[['Rank','Bowler','Team','Wickets','Economy_rate','Maidens','Four_wicket_haul']].set_index('Rank'), use_container_width=True)
+
+        # Best Bowler
+        def z_up(x): return (x - x.min())/(x.max() - x.min() + 1e-8)
+        def z_down(x): return (x.max() - x)/(x.max() - x.min() + 1e-8)
+        df_bowl = purple_cap.copy()
+        df_bowl['Score'] = (0.4*z_up(df_bowl['Wickets']) + 0.3*z_down(df_bowl['Economy_rate']) + 
+                           0.2*z_up(df_bowl['Maidens']) + 0.1*z_up(df_bowl['Five_wicket_hall'].fillna(0)*10))
+        mvp_bowl = df_bowl.sort_values('Score', ascending=False).iloc[0]
+
+        st.markdown(f"""
+        <div class="best-player-card">
+            <h2>Best Bowler of IPL 2025</h2>
+            <h1>{mvp_bowl['Bowler']}</h1>
+            <p style='font-size:1.5rem; margin:15px 0;'>
+                {int(mvp_bowl['Wickets'])} wickets • Economy {mvp_bowl['Economy_rate']:.2f} • {int(mvp_bowl['Maidens'])} maidens
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with tab3:
+        st.markdown("### Top All-Rounders of IPL 2025")
+        try:
+            ar = pd.read_csv('ipl_2025_allrounders.csv')
+            sort_col = 'All_Rounder_Score' if 'All_Rounder_Score' in ar.columns else 'Runs Scored'
+            top_ar = ar.sort_values(sort_col, ascending=False).head(10).copy()
+            top_ar['Rank'] = range(1, 11)
+            top_ar = top_ar.set_index('Rank')
+            st.dataframe(top_ar.style.highlight_max(axis=0), use_container_width=True)
+
+            best_ar = top_ar.iloc[0]
+            st.markdown(f"""
+            <div class="best-player-card">
+                <h2>Best All-Rounder of IPL 2025</h2>
+                <h1>{best_ar['Player Name']}</h1>
+                <p style='font-size:1.45rem; margin:15px 0;'>
+                    {best_ar['Runs Scored']} runs • {best_ar['Wickets Taken']} wickets • 
+                    Bat Avg {best_ar['Batting Average']:.1f} • Eco {best_ar['Eco Rate']:.2f}
+                </p>
+            </div>
+            """, unsafe_allow_html=True)
+        except:
+            st.warning("All-rounders CSV not found — add the file to enable this section.")
+
+elif main_option == "Team Analysis":
+    st.markdown("### Team Performance & Squad Analysis")
+
+    wins = matches['match_winner'].value_counts().reset_index()
+    wins.columns = ['Team', 'Wins']
+    fig = px.bar(wins, x='Team', y='Wins', text='Wins', color='Wins',
+                 color_continuous_scale='Oranges', title="IPL 2025 Wins Leaderboard")
+    fig.update_traces(textposition='outside')
+    fig.update_layout(font_color="#f0f0f0", title_font_color="#ffd700")
+    st.plotly_chart(fig, use_container_width=True)
+
+    teams = sorted(player_info['TEAM'].dropna().unique())
+    selected_team = st.selectbox("Select Team for Deep Dive", teams)
+
+    squad = player_info[player_info['TEAM'] == selected_team].copy()
+
+    if not squad.empty:
+        col1, col2, col3 = st.columns(3)
+        with col1: st.markdown(f"<div class='metric-card'>Squad Size<br><h2>{len(squad)}</h2></div>", unsafe_allow_html=True)
+        with col2: st.markdown(f"<div class='metric-card'>Average Age<br><h2>{squad['AGE'].mean():.1f}</h2></div>", unsafe_allow_html=True)
+        with col3: st.markdown(f"<div class='metric-card'>Total Players with Salary Data<br><h2>{squad['SOLD_PRICE'].count()} / {len(squad)}</h2></div>", unsafe_allow_html=True)
+
+        col1, col2 = st.columns(2)
+        with col1:
+            fig = px.histogram(squad, x='AGE', nbins=10, title="Age Distribution", color_discrete_sequence=['#ffd700'])
+            st.plotly_chart(fig, use_container_width=True)
+
+        with col2:
+            country_counts = squad['COUNTRY'].value_counts()
+            fig = px.bar(x=country_counts.index, y=country_counts.values, text=country_counts.values,
+                         labels={'x':'Country', 'y':'Number of Players'}, title="Country-wise Player Distribution",
+                         color=country_counts.values, color_continuous_scale='Oranges')
+            fig.update_traces(textposition='outside', textfont_size=15)
+            fig.update_layout(height=520, font_color="#f0f0f0", title_font_color="#ffd700")
+            st.plotly_chart(fig, use_container_width=True)
+
+    st.markdown("### Auction Spending Analysis")
+    def parse_salary(s):
+        s = str(s).lower().replace('cr', '*10000000').replace('lakh', '*100000').replace('l', '*100000')
+        s = re.sub(r'[₹, ]', '', s)
+        try: return eval(s)
+        except: return np.nan
+
+    def inr(val):
+        if pd.isna(val): return "N/A"
+        if val >= 10000000: return f"₹{val/10000000:.2f} Cr"
+        else: return f"₹{val/100000:.1f} Lakh"
+
+    player_info['Salary'] = player_info['SOLD_PRICE'].apply(parse_salary)
+
+    team_salary = st.selectbox("Select Team for Salary Breakdown", sorted(player_info['TEAM'].dropna().unique()), key="salary")
+
+    salary_data = player_info[(player_info['TEAM'] == team_salary) & player_info['Salary'].notna()]
+
+    if not salary_data.empty:
+        role_avg = salary_data.groupby('Paying_Role')['Salary'].mean().reset_index()
+        fig = px.bar(role_avg, x='Paying_Role', y='Salary', text=role_avg['Salary'].apply(inr),
+                     color='Paying_Role', title=f"Average Salary by Role — {team_salary}", height=620)
+        fig.update_traces(textposition='outside', textfont_size=16, textfont_color='#ffffff')
+        fig.update_layout(yaxis=dict(range=[0, role_avg['Salary'].max() * 1.5]), font_color="#f0f0f0", title_font_color="#ffd700")
+        st.plotly_chart(fig, use_container_width=True)
+
+        total = salary_data['Salary'].sum()
+        avg = salary_data['Salary'].mean()
+        col1, col2 = st.columns(2)
+        with col1: st.markdown(f"<div class='metric-card'>Total Auction Spend<br><h2>{inr(total)}</h2></div>", unsafe_allow_html=True)
+        with col2: st.markdown(f"<div class='metric-card'>Average Salary<br><h2>{inr(avg)}</h2></div>", unsafe_allow_html=True)
+    else:
+        st.info("No salary data available for this team yet.")
+
+elif main_option == "Ground Analysis (Coming Soon)":
+    st.markdown("<h1 style='text-align:center; color:#ffd700;'>Ground & Venue Analysis</h1>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align:center; color:#ff8c00;'>Coming Very Soon — Get Ready!</h2>", unsafe_allow_html=True)
+    st.markdown("<h3 style='text-align:center; color:#ccc;'>Detailed venue stats • Pitch reports • Toss impact • Highest totals • Win % and much more</h3>", unsafe_allow_html=True)
+    st.balloons()
+
+st.markdown("---")
+st.markdown("<p style='text-align:center; color:#888; padding:30px; font-size:1.1rem;'>Made with passion for Cricket • IPL 2025 Data Science Project • 2025 Season</p>", unsafe_allow_html=True)
