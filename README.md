@@ -13,6 +13,9 @@ Talking about the project, this basically focuses on data analysis (I know I hav
 As a future aspect, we would love to add pitch and venue analysis, along with some ML applications to make it more dynamic and future ready.
 
 
-<img width="120" height="80" alt="image" src="https://github.com/user-attachments/assets/f23909d1-f83f-449d-874c-d54a222030b0" />
+<img width="120" height="80" alt="image" src="https://github.com/user-attachments/assets/f23909d1-f83f-449d-874c-d54a222030b0" />  <img width="120" height="80" alt="image" src="https://github.com/user-attachments/assets/81289d4f-4bc2-4ab4-b1f9-21f68990cbe0" />
+
+<img width="120" height="80" alt="image" src="https://github.com/user-attachments/assets/a7a798c5-2680-435e-911d-377dc46fbfa3" />
+
 
 
